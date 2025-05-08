@@ -1,0 +1,348 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <title>Edit Survey</title>
+    <link rel="stylesheet" href="/css/style.css">
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/css/bootstrap.min.css"
+          integrity="sha384-Gn5384xqQ1aoWXA+058RXPxPg6fy4IWvTNh0E263XmFcJlSAwiGgFAW/dAiS6JXm" crossorigin="anonymous">
+    <script src="https://code.jquery.com/jquery-3.5.1.slim.min.js"></script>
+    <style>
+        body {
+            padding-top: 80px;
+            padding-left: 120px;
+        }
+        .form-control {
+            border: 1px solid #000; 
+            color: #495057; 
+            border-radius: 5px;
+        }
+        .question-block {
+            border: 1px solid #000;
+            border-radius: 10px;
+            padding: 10px;
+            margin-bottom: 20px;
+            position: relative; 
+        }
+        .question-container {
+            border: 1px solid #000;
+            border-radius: 10px;
+            padding: 10px;
+            margin-bottom: 20px;
+            position: relative; 
+        }
+        .question-section {
+            display: flex;
+            align-items: center;
+            margin-bottom: 10px; 
+        }
+        .question-section label {
+            margin-right: 20px; 
+            width: 150px; 
+        }
+        .question-section select {
+            width: 150px; 
+        }
+        .delete-question { 
+            position: absolute;
+            top: 5px;
+            right: 5px;
+            cursor: pointer;
+        }
+    </style>
+</head>
+<body>
+    <%- include('navbar.ejs') %>
+    <div class="container mt-5">
+        <h1>Edit Survey</h1>
+        <div id="notification" class="alert alert-success" style="display: none;" role="alert">
+            Survey has been updated successfully.
+        </div>
+        <form method="POST" action="/update-survey/<%= survey.survey_id %>">
+            <div class="form-group">
+                <label for="title">Survey Title:</label>
+                <input type="text" class="form-control" id="title" name="title" value="<%= survey.title %>" required>
+            </div>
+            <div class="form-group">
+                <label for="description">Survey Description:</label>
+                <textarea class="form-control" id="description" name="description" required><%= survey.description %></textarea>
+            </div>
+            <% survey.questions.forEach((question, qIndex) => { %>
+                <div class="form-group question-block" data-question-index="<%= qIndex %>">
+                    <input type="hidden" name="questions[<%= qIndex %>][question_id]" value="<%= question.question_id %>">
+                    <label style="font-weight: bold;" for="question_text_<%= qIndex %>">Question: </label>
+                    <input style="margin-bottom:25px;" type="text" class="form-control question-text" id="question_text_<%= qIndex %>" name="questions[<%= qIndex %>][question_text]" value="<%= question.question_text %>" required>
+                    <span class="delete-question" onclick="deleteQuestion(this)"><i class='bx bx-trash' style='font-size: 30px;'></i></span>
+                    <% if (question.options && question.options.length > 0) { %>
+                        <div class="options-container">
+                            <% question.options.forEach((option, oIndex) => { %>
+                                <div class="input-group mb-2">
+                                    <input type="hidden" name="questions[<%= qIndex %>][options][<%= oIndex %>][option_id]" value="<%= option.option_id %>">
+                                    <input style="border-radius: 5px;" type="text" class="form-control" name="questions[<%= qIndex %>][options][<%= oIndex %>][option_text]" value="<%= option.option_text %>" required>
+                                    <div class="input-group-append">
+                                        <button type="button" class="btn btn-danger delete-option"><i style="font-size:20px" class='bx bx-trash'></i></button>
+                                    </div>
+                                </div>
+                            <% }) %>
+                        </div>
+                        <% if (question.question_type === 'multiple_choice') { %>
+                            <button type="button" class="button-62 add-option">Add Option</button>
+                        <% } %>
+                        <% if (question.question_type === 'checkbox') { %>
+                            <button type="button" class="button-62 add-checkbox">Add Checkbox</button>
+                        <% } %>
+                    <% } %>
+                </div>
+            <% }) %>
+            <div id="questions-container"></div>
+            <button type="button" class="button-62" id="addQuestionButton">+ Add Question</button>
+            <button style="float: right;margin-top: 150px;margin-bottom: 100px;" type="submit" class="button-30">Update Survey</button>
+            <input type="hidden" name="deletedQuestions" id="deletedQuestions" value="">
+        </form>
+        <div id="noUpdatesNotification" class="alert alert-warning" style="display: none;" role="alert">
+            You have not made any updates yet.
+        </div>
+        <div id="lastQuestionWarning" class="alert alert-danger" style="display: none;" role="alert">
+            The survey must have at least one question.
+        </div>
+    </div>
+    <script src="https://code.jquery.com/jquery-3.5.1.slim.min.js"></script>
+<script>
+    $(document).ready(function () {
+        let deletedQuestions = [];
+
+        function isFormModified() {
+            let isModified = false;
+            $('input, textarea').each(function () {
+                if ($(this).attr('disabled')) {
+                    return;
+                }
+                if ($(this).val() !== $(this).prop('defaultValue')) {
+                    isModified = true;
+                    return false;
+                }
+            });
+            return isModified;
+        }
+
+        function hasDeletedOptionsOrCheckboxes() {
+            let deletedOptionsOrCheckboxes = false;
+            $('.input-group[data-deleted="true"]').each(function () {
+                deletedOptionsOrCheckboxes = true;
+                return false;
+            });
+            return deletedOptionsOrCheckboxes;
+        }
+
+        $('form').submit(function (event) {
+            if (!isFormModified() && !hasDeletedOptionsOrCheckboxes() && deletedQuestions.length === 0) {
+                event.preventDefault();
+                $('#noUpdatesNotification').show(); 
+            } else {
+                $('#noUpdatesNotification').hide();
+                $('#deletedQuestions').val(deletedQuestions.join(','));
+            }
+        });
+
+        $('.add-option').click(function () {
+            const optionsContainer = $(this).prev('.options-container');
+            const optionIndex = optionsContainer.children('.input-group').length;
+            const optionHtml = `
+                <div class="input-group mb-2">
+                    <input type="text" class="form-control" name="questions[${$(this).parent().data('question-index')}][options][${optionIndex}][option_text]" required>
+                    <div class="input-group-append">
+                        <button type="button" class="btn btn-danger delete-option"><i style="font-size:20px" class='bx bx-trash' style='font-size: 20px; '></i></button>
+                    </div>
+                </div>
+            `;
+            optionsContainer.append(optionHtml);
+        });
+
+        $('.add-checkbox').click(function () {
+            const optionsContainer = $(this).prev('.options-container');
+            const checkboxIndex = optionsContainer.children('.input-group').length;
+            const checkboxHtml = `
+                <div class="input-group mb-2">
+                    <input type="text" class="form-control" name="questions[${$(this).parent().data('question-index')}][options][${checkboxIndex}][option_text]" required>
+                    <div class="input-group-append">
+                        <button type="button" class="btn btn-danger delete-option"><i style="font-size:20px" class='bx bx-trash' style='font-size: 20px; '></i></button>
+                    </div>
+                </div>
+            `;
+            optionsContainer.append(checkboxHtml);
+        });
+
+        $(document).on('click', '.delete-option', function () {
+            const optionContainer = $(this).closest('.input-group');
+            const optionId = optionContainer.find('input[name$="[option_id]"]').val();
+            const remainingOptions = optionContainer.siblings('.input-group:not([data-deleted="true"])').length;
+            if (remainingOptions < 2) {
+                alert("You cannot delete the last two options.");
+                return;
+            }
+            if (optionId) {
+                optionContainer.find('input[name$="[option_text]"]').prop('disabled', true);
+                optionContainer.attr('data-deleted', 'true');
+                optionContainer.hide();
+            } else {
+                optionContainer.remove();
+            }
+            updateButtonVisibility();
+        });
+
+        window.deleteQuestion = function (deleteIcon) {
+    const questionContainer = $(deleteIcon).closest('.question-block');
+    const questionId = questionContainer.find('input[name$="[question_id]"]').val();
+
+    const remainingQuestions = $('.question-block').not('[style*="display: none"]').length;
+    if (remainingQuestions <= 1) {
+        $('#lastQuestionWarning').show();
+        setTimeout(() => {
+            $('#lastQuestionWarning').hide('slow');
+        }, 3000);
+        return;
+    }
+
+    if (questionId) {
+        deletedQuestions.push(questionId);
+        questionContainer.hide();
+        questionContainer.find('input, textarea').prop('disabled', true);
+    } else {
+        questionContainer.remove();
+    }
+    $('#deletedQuestions').val(deletedQuestions.join(','));
+};
+
+
+
+
+        var notification = $('#notification');
+        if (document.cookie.indexOf('surveyUpdated=true') !== -1) {
+            notification.show();
+            document.cookie = 'surveyUpdated=; Max-Age=0';
+            setTimeout(function () {
+                notification.hide('slow');
+            }, 3000);
+        } else {
+            notification.hide();
+        }
+
+        document.getElementById('addQuestionButton').addEventListener('click', function() {
+            const container = document.getElementById('questions-container');
+            const questionNumber = container.children.length + 1;
+            const questionDiv = document.createElement('div');
+            questionDiv.className = 'question-container';
+
+            questionDiv.innerHTML = `
+                <div class="question-section">
+                    <label style="font-weight: bold;" for="question_text_${questionNumber}">Question:</label>
+                    <input type="text" class="form-control" id="question_text_${questionNumber}" name="newQuestions[${questionNumber}][question_text]" placeholder="Enter question text" required>
+                    <select style="margin-right:50px" class="form-control select-type" name="newQuestions[${questionNumber}][question_type]" id="question_type_${questionNumber}" onchange="addOptionsField(this, ${questionNumber})">
+                        <option value="">Select Type</option>
+                        <option value="text">Plain Text</option>
+                        <option value="multiple_choice">Multiple Choice</option>
+                        <option value="checkbox">Checkbox</option>
+                    </select>
+                    <span class="delete-question" onclick="deleteNewQuestion(this)"><i class='bx bx-trash delete-question' style='font-size: 30px;'></i></span>
+                </div>
+                <div id="options_container_${questionNumber}"></div>
+            `;
+
+            container.appendChild(questionDiv);
+        });
+
+        window.addOptionsField = function (select, questionNumber) {
+            const optionsContainer = document.getElementById(`options_container_${questionNumber}`);
+            if (select.value === 'multiple_choice') {
+                optionsContainer.innerHTML = '';
+                optionsContainer.innerHTML += `
+                    <div class="mb-3"> 
+                        <div class="input-group">
+                            <input type="text" class="form-control" name="newQuestions[${questionNumber}][options][]" placeholder="Option 1" required style="border-radius: 5px; padding: 5px; width: 27.5%;">
+                        </div>
+                    </div>
+                    <div class="mb-3"> 
+                        <div class="input-group">
+                            <input type="text" class="form-control" name="newQuestions[${questionNumber}][options][]" placeholder="Option 2" required style="border-radius: 5px; padding: 5px; width: 27.5%;">
+                        </div>
+                    </div>
+                `;
+                optionsContainer.innerHTML += `
+                    <button type="button" class="btn btn-outline-dark" onclick="addOption(${questionNumber})" id="addOption_${questionNumber}">+ Add Option</button>
+                `;
+            } else if (select.value === 'checkbox') {
+                optionsContainer.innerHTML = '';
+                optionsContainer.innerHTML += `
+                    <div class="form-group mb-3"> 
+                        <div class="input-group">
+                            <input type="text" class="form-control" name="newQuestions[${questionNumber}][checkboxes][]" placeholder="Checkbox 1" required style="border-radius: 5px; padding: 5px; width: 27.5%;">
+                        </div>
+                    </div>
+                    
+                    <div class="form-group mb-3"> 
+                        <div class="input-group">
+                            <input type="text" class="form-control" name="newQuestions[${questionNumber}][checkboxes][]" placeholder="Checkbox 2" required style="border-radius: 5px; padding: 5px; width: 27.5%;">
+                        </div>
+                    </div>
+                `;
+                optionsContainer.innerHTML += `
+                    <button type="button" class="btn btn-outline-dark" onclick="addCheckbox(${questionNumber})" id="addCheckbox_${questionNumber}">+ Add Checkbox</button>
+                `;
+            } else {
+                optionsContainer.innerHTML = '';
+            }
+        }
+
+        window.addOption = function (questionNumber) {
+            const optionsContainer = document.getElementById(`options_container_${questionNumber}`);
+            const optionNumber = optionsContainer.getElementsByTagName('input').length + 1;
+            const optionDiv = document.createElement('div');
+            optionDiv.innerHTML = `
+                <div class="mb-3"> 
+                    <div class="input-group">
+                        <input type="text" class="form-control" name="newQuestions[${questionNumber}][options][]" placeholder="Option ${optionNumber}" required style="border-radius: 5px; padding: 5px; width: 27.5%;">
+                        <div class="input-group-append">
+                            <button type="button" style="padding: 0; border: none; background: none; padding-left: 5px;" class="btn btn-outline-danger" onclick="deleteOption(this)"><i style="font-size: 30px;" class='bx bx-trash'></i></button>
+                        </div>
+                    </div>
+                </div>
+            `;
+            optionsContainer.insertBefore(optionDiv, optionsContainer.querySelector(`#addOption_${questionNumber}`));
+        }
+
+        window.addCheckbox = function (questionNumber) {
+            const optionsContainer = document.getElementById(`options_container_${questionNumber}`);
+            const checkboxNumber = optionsContainer.getElementsByTagName('input').length + 1;
+            const checkboxDiv = document.createElement('div');
+            checkboxDiv.innerHTML = `
+                <div class="form-group mb-3"> 
+                    <div class="input-group">
+                        <input type="text" class="form-control" name="newQuestions[${questionNumber}][checkboxes][]" placeholder="Checkbox ${checkboxNumber}" required style="border-radius: 5px; padding: 5px; width: 27.5%;">
+                        <div class="input-group-append">
+                            <button type="button" style="padding: 0; border: none; background: none; padding-left: 5px;" class="btn btn-outline-danger" onclick="deleteCheckbox(this)"><i style="font-size: 30px;" class='bx bx-trash'></i></button>
+                        </div>
+                    </div>
+                </div>
+            `;
+            optionsContainer.insertBefore(checkboxDiv, optionsContainer.querySelector(`#addCheckbox_${questionNumber}`));
+        }
+
+        window.deleteNewQuestion = function (deleteIcon) {
+            const questionContainer = deleteIcon.closest('.question-container');
+            questionContainer.parentNode.removeChild(questionContainer);
+        }
+
+        window.deleteOption = function (button) {
+            const inputGroup = button.closest('.input-group');
+            inputGroup.parentNode.removeChild(inputGroup);
+        }
+
+        window.deleteCheckbox = function (button) {
+            const formGroup = button.closest('.form-group');
+            formGroup.parentNode.removeChild(formGroup);
+        }
+    });
+</script>
+</body>
+</html>

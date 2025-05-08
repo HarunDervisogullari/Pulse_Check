@@ -1,0 +1,53 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <title>Login page</title>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="X-UA-Compatible" content="ie=edge">
+    <link rel="stylesheet" href="/css/style.css">
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/css/bootstrap.min.css"
+    integrity="sha384-Gn5384xqQ1aoWXA+058RXPxPg6fy4IWvTNh0E263XmFcJlSAwiGgFAW/dAiS6JXm" crossorigin="anonymous">
+   
+</head>
+<body>
+    <%- include('landingPageClone.ejs') %>
+    <div style="height: 50px;">
+
+    </div>
+<div class="container mt-5">
+<div class="row justify-content-center">
+  <div class="col-5 mt-2">
+      <div>
+          <% if(errors != "") { %>
+              <% errors.forEach((item) => { %>
+                  <div class="alert alert-danger">
+                      <%- item %>
+                  </div>
+              <% }); %>
+          <% } %>
+      </div>
+            <form method="POST" action="/login">
+                <div class="form-group">
+                    <label style="margin-right: 72%;" for="email">Email address:</label>
+                    <input type="email" class="form-control" id="email" name="email"  placeholder="Enter email" required>
+                </div>
+                <div class="form-group">
+                    <label style="margin-right: 79%;" for="password">Password:</label>
+                    <input type="password" class="form-control" id="password" name="password" placeholder="Password" required>
+                </div>
+                <button style="margin-right: 80%;" type="submit" class="btn btn-outline-dark">Log in</button>
+            </form>
+
+            <hr>
+            <div>
+                If you haven't had an account. <a style="color: rgb(35, 18, 114); font-weight: bold;" href="/register">Create a new account</a>.
+            </div>
+            <div>
+                Return to <a style="color: rgb(35, 18, 114); font-weight: bold" href="/">Home Page</a>
+            </div>
+        </div>
+    </div>
+</div>
+</body>
+</html>

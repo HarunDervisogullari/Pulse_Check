@@ -1,0 +1,116 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>View Survey</title>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="X-UA-Compatible" content="ie=edge">
+    <link rel="stylesheet" href="/css/style.css">
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/css/bootstrap.min.css"
+          integrity="sha384-Gn5384xqQ1aoWXA+058RXPxPg6fy4IWvTNh0E263XmFcJlSAwiGgFAW/dAiS6JXm" crossorigin="anonymous">
+    <script src="https://code.jquery.com/jquery-3.5.1.slim.min.js" integrity="sha384-DfXdz2htPH0lsSSs5nCTpuj/zy4C+OGpamoFVy38MVBnE+IbbVYUew+OrCXaRkfj" crossorigin="anonymous"></script>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 20px;
+        }
+        
+        .survey-header {
+            text-align: center;
+            filter: blur(4);
+            padding: 10px;
+            border-radius: 12px;
+            margin-bottom: 20px;
+        }
+        .survey-question {
+            background-color: transparent;
+            border: 1px solid black;
+            border-radius: 12px;
+            margin-bottom: 15px;
+            backdrop-filter: blur(5px); 
+            box-shadow: rgba(0, 0, 0, 0.19) 0px 10px 20px, rgba(0, 0, 0, 0.23) 0px 6px 6px;
+        }
+        .list-group {
+            margin-left: 50px;
+            font-size: 17px;
+            padding-top: 1px;
+        }
+        .form-check-input[type="checkbox"],
+        .form-check-input[type="radio"] {
+            width: 20px;
+            height: 20px;
+        }
+        .move{
+            border: 1px solid #000; 
+            padding:5px 0px 7px 30px ;
+            border-radius: 15px;
+            width: 95%;
+            background-color: #fff;
+            box-shadow: rgba(0, 0, 0, 0.19) 0px 10px 20px, rgba(0, 0, 0, 0.23) 0px 6px 6px;
+        }
+        textarea{
+            box-shadow: rgba(0, 0, 0, 0.19) 0px 10px 20px, rgba(0, 0, 0, 0.23) 0px 6px 6px;
+            margin-bottom: 15px; 
+            width: 95%; 
+            border: 1px solid black; 
+            border-radius: 12px; 
+            padding-bottom: 10px;
+        }
+    </style>
+</head>
+<body>
+    <%- include('navbar.ejs') %>
+
+    <div class="container mt-5">
+        <div class="survey-header">
+            <h1>Title: <%- survey.title %></h1>
+            <p>Description: <%- survey.description %></p>
+            <p><strong>Created At:</strong> <%- new Date(survey.created_at).toLocaleString() %></p>
+            <!-- Export button -->
+            <a href="/export-survey/<%= survey.survey_id %>" class="button-62">Export as XML</a>
+        </div>
+
+        <form action="/submitSurvey/<%= survey.survey_id %>" method="POST">
+            <% if (survey.questions && survey.questions.length > 0) { %>
+                <% survey.questions.forEach((question, index) => { %>
+                    <div style="margin-left: 8%;" class="survey-question">
+                        <div style="margin-top: 10px; margin-left: 20px; width: 100%;border-radius: 5px; font-size: 17px;" class="question-title mb-3">
+                            Question <%= index + 1 %>: <%= question.question_text %>
+                        </div>
+                        <hr style="margin-bottom: 10px;background-color: black;"/>
+                        <div class="list-group">
+                            <% if (question.options && question.options.length > 0) { %>
+                                <% if (question.question_type === 'checkbox') { %>
+                                    <% question.options.forEach(option => { %>
+                                        <label class="move">
+                                            <input class="form-check-input flex-shrink-0" type="checkbox" name="question<%= question.question_id %>[]" value="<%= option.option_text %>">
+                                            <span style="margin-left: 5px;"><%= option.option_text %></span>
+                                        </label>
+                                        <br>
+                                    <% }) %>
+                                <% } else if (question.question_type === 'multiple_choice') { %>
+                                    <% question.options.forEach(option => { %>
+                                        <label class="move">
+                                            <input class="form-check-input flex-shrink-0" type="radio" name="question<%= question.question_id %>" value="<%= option.option_text %>">
+                                            <span><%= option.option_text %></span>
+                                        </label>
+                                        <br>
+                                    <% }) %>
+                                <% } %>
+                            <% } else if (question.question_type === 'text') { %>
+                                <textarea  style="margin-bottom: 15px; width: 95%; border: 1px solid black; border-radius: 12px; padding-bottom: 10px;" class="form-control" name="question<%= question.question_id %>" rows="3" placeholder="Type your answer here..."></textarea>
+                            <% } %>
+                        </div>
+                    </div>
+                <% }) %>
+            <% } else { %>
+                <p>No questions found for this survey.</p>
+            <% } %>
+            <div class="mt-3 text-center">
+                <button type="submit" class="button-62">Submit Answers</button>
+            </div>
+        </form>
+    </div>
+</body>
+</html>
+

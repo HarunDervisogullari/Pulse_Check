@@ -1,0 +1,90 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>User Profile</title>
+    <link rel="stylesheet" href="/css/style.css">
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/css/bootstrap.min.css"
+          integrity="sha384-Gn5384xqQ1aoWXA+058RXPxPg6fy4IWvTNh0E263XmFcJlSAwiGgFAW/dAiS6JXm" crossorigin="anonymous">
+          <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">
+
+    <style>
+          .show-hide-icon {
+            position: absolute;
+            right: 760px;
+            cursor: pointer;
+            
+        }
+        .password-container{
+                    border-radius: 5px;
+                    border: 1px solid black; 
+                    padding: 1px 50px;
+                    margin-bottom: 10px;
+                    float: right;
+                    margin-right: 550px;
+                    position: relative;
+                }
+                #userInfo>p{
+                    font-size:x-large;
+                    margin-top: 50px;
+                }
+                #editProfileForm p{
+                    font-size:18px;
+                    margin-top: 20px;
+                }
+  </style>
+</head>
+<body>
+    <%- include('navbar.ejs') %>
+
+    <div class="container mt-5">
+        <h1 class="mb-4">User Profile</h1>
+        <hr style="background-color: black;">
+        <div id="userInfo">
+            <p><strong>Name:</strong> <%= user.fullname %></p>
+            <p style="margin-bottom: 20px;"><strong>Email:</strong> <%= user.email %></p>
+            <button style="height: 50px; width: 90px;" id="editButton" class="button-62">Edit</button>
+        </div>
+
+        <div id="editProfileForm" style="display: none;">
+            <h2 style="margin-top: 70px;">Edit Profile</h2>
+            <form action="/profile" method="POST">
+                <p> <strong> User name:</strong> <input class="password-container" type="text" name="fullname" value="<%= user.fullname %>" required></p>
+                <p><strong>Current Password:</strong> <input class="password-container" type="password" name="oldPassword" id="oldPassword" required></p>
+                <p><strong>New Password:</strong> <input class="password-container" type="password" name="newPassword" id="newPassword"></p>
+                <p><strong>Confirm New Password: </strong><input class="password-container" type="password" name="confirmNewPassword" id="confirmNewPassword"></p>
+                <p><button style="height: 50px; width: 150px;" type="submit" class="button-62">Update Profile</button></p>
+                <p><button type="button" id="cancelButton" style="border-radius: 12px;" class="btn btn-danger">Cancel</button></p>
+            </form>
+        </div>
+    </div>
+
+    <script>
+         
+
+    document.getElementById('editButton').onclick = function() {
+        document.getElementById('editProfileForm').style.display = 'block';
+        document.getElementById('userInfo').style.display = 'none';
+    };
+
+    document.getElementById('cancelButton').onclick = function() {
+        document.getElementById('editProfileForm').style.display = 'none';
+        document.getElementById('userInfo').style.display = 'block';
+    };
+
+    document.getElementById('editProfileForm').onsubmit = function() {
+        var newPassword = document.getElementById('newPassword').value;
+        var confirmNewPassword = document.getElementById('confirmNewPassword').value;
+        
+        if (newPassword !== confirmNewPassword) {
+            alert("New password and confirmed password do not match.");
+            return false; 
+        }
+    };
+    </script>
+
+    <script src="https://code.jquery.com/jquery-3.5.1.slim.min.js" integrity="sha384-DfXdz2htPH0lsSSs5nCTpuj/zy4C+OGpamoFVy38MVBnE+IbbVYUew+OrCXaRkfj" crossorigin="anonymous"></script>
+</body>
+</html>

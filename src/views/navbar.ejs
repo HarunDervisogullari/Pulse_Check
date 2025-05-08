@@ -1,0 +1,98 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Pulse Check</title>
+    <link rel="stylesheet" href="/css/style.css">
+    <link href='https://unpkg.com/boxicons@2.1.4/css/boxicons.min.css' rel='stylesheet'>
+</head>
+
+<body>
+    
+    <nav class="sidebar">
+        <div class="logo-menu">
+            <h2 class="logo">Pulse Check</h2>
+            <i class='bx bx-menu toggle-btn' ></i>
+        </div>
+        <ul class="list">
+            <li class="list-item ">
+                <a href="/homepage">
+                    <i class='bx bx-home'></i>
+                    <span class="link-name" style="--i:1;">HomePage</span>
+                </a>
+
+            </li>
+            <li class="list-item ">
+                <a href="/createSurvey">
+                    <i class='bx bx-message-square-add' ></i>
+                    <span class="link-name" style="--i:2;">Create a survey</spa n>
+                </a>
+
+            <li class="list-item">
+                <a href="/searchSurveys">
+                    <i class='bx bx-search'></i>
+                    <span class="link-name" style="--i:3;">Search Surveys</span>                    </a>
+            </li>
+
+            </li>
+            <li class="list-item">
+                <a href="/mySurveys">
+                    <i class='bx bxs-data' ></i>
+                    <span class="link-name" style="--i:4;">My Surveys</span>
+                </a>
+                
+            </li>
+            <li class="list-item">
+                <a href="/profile">
+                    <i class='bx bxs-user-detail' ></i>
+                    <span class="link-name" style="--i:5;">Profile</span>
+                </a>
+                
+            </li>
+            
+            <li class="list-item"  id="logout-link" >
+                <a href="#">
+                    <i class='bx bx-log-out'></i>
+                    <span class="link-name" style="--i:6;">Log out</span>
+                </a>
+                
+            </li>
+            
+        </ul>
+    </nav>
+    
+    <script>
+      document.addEventListener('DOMContentLoaded', function () {
+          const toggleBtn = document.querySelector('.toggle-btn');
+          const sidebar = document.querySelector('.sidebar');
+  
+          toggleBtn.addEventListener('click', function () {
+              sidebar.classList.toggle('active');
+          });
+      });
+  </script>
+  
+
+    <script>
+      document.getElementById('logout-link').addEventListener('click', function(event) {
+          var form = document.createElement('form');
+          form.method = 'POST';
+          form.action = '/logout';
+          var submitButton = document.createElement('button');
+          submitButton.type = 'submit';
+          submitButton.style.display = 'none'; 
+          form.appendChild(submitButton);
+          document.body.appendChild(form);
+          submitButton.click();
+      });
+  </script>
+
+    <script src="../services/script.js"></script>
+    
+</body>
+
+</html>

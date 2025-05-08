@@ -1,0 +1,38 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Enter Passcode</title>
+    <link rel="stylesheet" href="/css/style.css">
+    <style>
+        .container{
+            margin-left: 40%;
+            margin-top: 10%;
+        }
+        .form-control{
+            border: 1px solid #000; 
+            color: #495057; 
+            border-radius: 12px;
+            width: 30%;
+            padding: 5px ;
+            box-shadow: rgba(0, 0, 0, 0.19) 0px 10px 20px, rgba(0, 0, 0, 0.23) 0px 6px 6px;
+        }
+        h1{
+            margin-bottom: 2%;
+        }
+    </style>
+</head>
+<body>
+    <%- include('navbar.ejs') %>
+    <div class="container mt-5">
+        <h1>Enter Passcode</h1>
+        <form action="/survey/enterPasscode" method="POST">
+            <input type="hidden" name="surveyId" value="<%= surveyId %>">
+            <div class="form-group">
+                <input type="password" class="form-control" id="passcode" name="passcode" required>
+            </div>
+            <button style="height: 30px; width: 80px; margin-top: 2%;" type="submit" class="button-14">Submit</button>
+        </form>
+    </div>
+</body>
+</html>

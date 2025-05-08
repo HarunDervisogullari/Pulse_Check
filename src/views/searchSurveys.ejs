@@ -1,0 +1,63 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Search Surveys</title>
+    <link rel="stylesheet" href="/css/style.css">
+    <style>
+        body, html {
+            padding-top: 7  0px;
+            height: 100%;
+            margin: 0;
+            align-items: center;
+            justify-content: center;
+        }
+        
+        
+        h2{
+            font-size: 50px;
+            
+        }
+        .form-control {
+            margin-left: 15%;
+            border: 1px solid #000; 
+            color: #495057; 
+            border-radius: 5px;
+            padding: 5px;
+            width: 30%;
+            
+        }
+        .container-1{
+            margin-left: 16.5%;
+        }
+    </style>
+</head>
+<body>
+    <%- include('navbar.ejs') %>
+    <div class="container">
+        <div class="textAni">
+            <h1 class="textAnimt">Search Survey</h1>
+        </div>
+        <form action="/searchSurveys" method="POST">
+            <input type="text" class="form-control" name="searchTerm" placeholder="Search by title" value="<%= typeof searchTerm !== 'undefined' ? searchTerm : '' %>">
+            <button type="submit" class="button-14">Search</button>
+        </form>
+        <div class="container-1">
+        <% if (typeof surveys !== 'undefined' && surveys.length > 0) { %>
+            <ul>
+                <% surveys.forEach(survey => { %>
+                    <div>
+                        <h3><%= survey.title %> <%= survey.is_private ? '(Private)' : '(Public)' %></h3>
+                        <a href="/survey/<%= survey.survey_id %>">View Survey</a>
+                    </div>
+                <% }); %>                
+            </ul>
+        <% } else if (typeof surveys !== 'undefined') { %>
+            <p>No surveys found.</p>
+        <% } %>
+    </div>
+    </div>
+</body>
+</html>

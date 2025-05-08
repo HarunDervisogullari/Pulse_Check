@@ -1,0 +1,304 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <title>Create Survey</title>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="X-UA-Compatible" content="ie=edge">
+    <link rel="stylesheet" href="/css/style.css">
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/css/bootstrap.min.css"
+          integrity="sha384-Gn5384xqQ1aoWXA+058RXPxPg6fy4IWvTNh0E263XmFcJlSAwiGgFAW/dAiS6JXm" crossorigin="anonymous">
+    <script src="https://code.jquery.com/jquery-3.5.1.slim.min.js" integrity="sha384-DfXdz2htPH0lsSSs5nCTpuj/zy4C+OGpamoFVy38MVBnE+IbbVYUew+OrCXaRkfj" crossorigin="anonymous"></script>
+    <style>
+        .form-control {
+            border: 1px solid #000; 
+            color: #495057; 
+        }
+        .question-container {
+            border: 1px solid #000;
+            border-radius: 10px;
+            padding: 10px;
+            margin-bottom: 20px;
+            position: relative; 
+        }
+        .question-section {
+            display: flex;
+            align-items: center;
+            margin-bottom: 10px; 
+        }
+        .question-section label {
+            margin-right: 20px; 
+            width: 150px; 
+        }
+        .question-section select {
+            width: 150px; 
+        }
+        .question-section .select-type {
+            margin-left: 20px; 
+        }
+        .delete-question { 
+            position: absolute;
+            top: 5px;
+            right: 5px;
+            cursor: pointer;
+        }
+    </style>
+</head>
+<body>
+    <%- include('navbar.ejs') %>
+
+    <div class="container mt-5">
+        <div class="textAni">
+            <h1 class="textAnimt">Let's create a new survey.</h1>
+        </div>
+        <div>
+            <% if (errors && errors.length > 0) { %>
+                <% errors.forEach((item) => { %>
+                    <div class="alert alert-danger">
+                        <%- item %>
+                    </div>
+                <% }); %>
+            <% } %>
+            <% if (success && success.length > 0) { %>
+                <% success.forEach((message) => { %>
+                    <div class="alert alert-success">
+                        <%- message %>
+                    </div>
+                <% }); %>
+            <% } %>
+            <form method="POST" action="/createSurvey">
+                <div class="form-group">
+                    <label style="font-weight: bold;" for="title">Survey Title:</label>
+                    <input type="text" class="form-control" id="title" name="title" placeholder="Enter survey title" required>
+                </div>
+                <div class="form-group">
+                    <label style="font-weight: bold;" for="description">Survey Description:</label>
+                    <textarea class="form-control" id="description" name="description" placeholder="Enter survey description" required></textarea>
+                </div>
+                <div id="questions-container"></div>
+                <button type="button" style="margin-top: 50px;" class="btn button-62" id="addQuestionButton">+ Add Question</button>
+                <br><br>
+                <div class="form-group">
+                    <label style="font-weight: bold;" for="is_private">Make this survey private?</label>
+                    <input type="checkbox" id="is_private" name="is_private">
+                </div>
+                <div class="form-group" id="passcodeField" style="display: none;">
+                    <label style="font-weight: bold;" for="passcode">Passcode:</label>
+                    <input type="password" class="form-control" id="passcode" name="passcode">
+                </div>
+                <button type="submit" style="float: right;margin-top: 100px; margin-bottom: 100px;" class="btn button-30">Create Survey</button>
+            </form>
+
+            <form method="POST" action="/import-survey" enctype="multipart/form-data" style="margin-top: 20px;">
+                <div class="form-group">
+                    <label for="surveyXML">Import Survey (XML):</label>
+                    <input type="file" id="surveyXML" name="surveyXML" accept=".xml" required>
+                </div>
+                <button type="button" class="btn button-62" id="importSurveyButton">Import Survey</button>
+            </form>
+        </div>
+    </div>
+
+    <script>
+        document.getElementById('addQuestionButton').addEventListener('click', function() {
+            const container = document.getElementById('questions-container');
+            const questionNumber = container.children.length + 1;
+            const questionDiv = document.createElement('div');
+            questionDiv.className = 'question-container';
+
+            questionDiv.innerHTML = `
+                <div class="question-section">
+                    <label style="font-weight: bold;" for="question_text_${questionNumber}">Question:</label>
+                    <input type="text" class="form-control" id="question_text_${questionNumber}" name="questionText[]" placeholder="Enter question text" required>
+                    <select style="margin-right:50px" class="form-control select-type" name="questionType[]" id="question_type_${questionNumber}" onchange="addOptionsField(this, ${questionNumber})">
+                        <option value="">Select Type</option>
+                        <option value="text">Plain Text</option>
+                        <option value="multiple_choice">Multiple Choice</option>
+                        <option value="checkbox">Checkbox</option>
+                    </select>
+                    <span class="delete-question" onclick="deleteQuestion(this)"><i class='bx bx-trash delete-question' style='font-size: 30px;'></i></span>
+                </div>
+                <div id="options_container_${questionNumber}"></div>
+            `;
+
+            container.appendChild(questionDiv);
+        });
+
+        function addOptionsField(select, questionNumber, options = [], checkboxes = []) {
+            const optionsContainer = document.getElementById(`options_container_${questionNumber}`);
+            if (select.value === 'multiple_choice') {
+                optionsContainer.innerHTML = '';
+                const defaultOptions = options.length ? options : ['', ''];
+                defaultOptions.forEach((option, index) => {
+                    optionsContainer.innerHTML += `
+                        <div class="mb-3"> 
+                            <div class="input-group">
+                                <input type="text" class="form-control" id="option_${questionNumber}_${index + 1}" name="option_${questionNumber}[]" value="${option}" placeholder="Option ${index + 1}" required style="border-radius: 5px; padding: 5px; width: 27.5%;">
+                                <div class="input-group-append">
+                                    <button type="button" style="padding: 0; border: none; background: none; padding-left:5px;" class="btn btn-outline-danger" onclick="deleteOption(this)"><i style="font-size:30px" class='bx bx-trash' style='font-size: 20px; '></i></button>
+                                    </div>
+                                </div>
+                        </div>
+                    `;
+                });
+                optionsContainer.innerHTML += `
+                    <button type="button" class="btn btn-outline-dark" id="addOption_${questionNumber}" onclick="addOption(${questionNumber})">+ Add Option</button>
+                `;
+            } else if (select.value === 'checkbox') {
+                optionsContainer.innerHTML = '';
+                const defaultCheckboxes = checkboxes.length ? checkboxes : ['', ''];
+                defaultCheckboxes.forEach((checkbox, index) => {
+                    optionsContainer.innerHTML += `
+                        <div class="form-group mb-3"> 
+                            <div class="input-group">
+                                <input type="text" class="form-control" id="checkbox_${questionNumber}_${index + 1}" name="checkbox_${questionNumber}[]" value="${checkbox}" placeholder="Enter checkbox text" required style="border-radius: 5px; padding: 5px; width: 27.5%;">
+                                <div class="input-group-append">
+                                    <button type="button" style="padding: 0; border: none; background: none; padding-left:5px;" class="btn btn-outline-danger" onclick="deleteCheckbox(this)"><i style="font-size:30px" class='bx bx-trash' style='font-size: 20px; '></i></button>
+                                    </div>
+                                </div>
+                        </div>
+                    `;
+                });
+                optionsContainer.innerHTML += `
+                    <button type="button" class="btn btn-outline-dark" id="addCheckbox_${questionNumber}" onclick="addCheckbox(${questionNumber})">+ Add Checkbox</button>
+                `;
+            } else {
+                optionsContainer.innerHTML = '';
+            }
+        }
+
+        function addOption(questionNumber) {
+            const optionsContainer = document.getElementById(`options_container_${questionNumber}`);
+            const optionNumber = optionsContainer.getElementsByTagName('input').length + 1;
+            const optionDiv = document.createElement('div');
+            optionDiv.innerHTML = `
+                <div class="mb-3"> 
+                    <div class="input-group">
+                        <input type="text" class="form-control" id="option_${questionNumber}_${optionNumber}" name="option_${questionNumber}[]" placeholder="Option ${optionNumber}" required style="border-radius: 5px; padding: 5px; width: 27.5%;">
+                        <div class="input-group-append">
+                            <button type="button" style="padding: 0; border: none; background: none; padding-left: 5px;" class="btn btn-outline-danger" onclick="deleteOption(this)"><i style="font-size: 30px;" class='bx bx-trash'></i></button>
+                        </div>
+                    </div>
+                </div>
+            `;
+            optionsContainer.appendChild(optionDiv);
+            moveAddButtonBelowOptions(optionsContainer, `addOption_${questionNumber}`);
+        }
+
+        function addCheckbox(questionNumber) {
+            const optionsContainer = document.getElementById(`options_container_${questionNumber}`);
+            const checkboxNumber = optionsContainer.getElementsByTagName('input').length + 1;
+            const checkboxDiv = document.createElement('div');
+            checkboxDiv.innerHTML = `
+                <div class="form-group mb-3"> 
+                    <div class="input-group">
+                        <input type="text" class="form-control" id="checkbox_${questionNumber}_${checkboxNumber}" name="checkbox_${questionNumber}[]" placeholder="Enter checkbox text" required style="border-radius: 5px; padding: 5px; width: 27.5%;">
+                        <div class="input-group-append">
+                            <button type="button" style="padding: 0; border: none; background: none; padding-left: 5px;" class="btn btn-outline-danger" onclick="deleteCheckbox(this)"><i style="font-size: 30px;" class='bx bx-trash'></i></button>
+                        </div>
+                    </div>
+                </div>
+            `;
+            optionsContainer.appendChild(checkboxDiv);
+            moveAddButtonBelowOptions(optionsContainer, `addCheckbox_${questionNumber}`);
+        }
+
+        function moveAddButtonBelowOptions(container, buttonId) {
+            const addButton = document.getElementById(buttonId);
+            container.appendChild(addButton);
+        }
+
+        function deleteQuestion(deleteIcon) {
+            const questionContainer = deleteIcon.closest('.question-container');
+            questionContainer.parentNode.removeChild(questionContainer);
+        }
+
+        function deleteOption(button) {
+            const inputGroup = button.closest('.input-group');
+            inputGroup.parentNode.removeChild(inputGroup);
+        }
+
+        function deleteCheckbox(button) {
+            const formGroup = button.closest('.form-group');
+            formGroup.parentNode.removeChild(formGroup);
+        }
+
+        document.getElementById('importSurveyButton').addEventListener('click', function() {
+            const fileInput = document.getElementById('surveyXML');
+            const file = fileInput.files[0];
+            if (file) {
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                    const parser = new DOMParser();
+                    const xmlDoc = parser.parseFromString(e.target.result, "text/xml");
+
+                    
+                    document.getElementById('title').value = '';
+                    document.getElementById('description').value = '';
+                    document.getElementById('questions-container').innerHTML = '';
+
+                    
+                    const survey = xmlDoc.getElementsByTagName('survey')[0];
+                    document.getElementById('title').value = survey.getElementsByTagName('title')[0].childNodes[0].nodeValue;
+                    document.getElementById('description').value = survey.getElementsByTagName('description')[0].childNodes[0].nodeValue;
+
+                    const questions = survey.getElementsByTagName('questions');
+                    for (let i = 0; i < questions.length; i++) {
+                        const questionText = questions[i].getElementsByTagName('question_text')[0].childNodes[0].nodeValue;
+                        const questionType = questions[i].getElementsByTagName('question_type')[0].childNodes[0].nodeValue;
+                        const options = [];
+                        const checkboxes = [];
+
+                        if (questionType === 'multiple_choice') {
+                            const optionNodes = questions[i].getElementsByTagName('options');
+                            for (let j = 0; j < optionNodes.length; j++) {
+                                options.push(optionNodes[j].getElementsByTagName('option_text')[0].childNodes[0].nodeValue);
+                            }
+                        } else if (questionType === 'checkbox') {
+                            const checkboxNodes = questions[i].getElementsByTagName('options');
+                            for (let j = 0; j < checkboxNodes.length; j++) {
+                                checkboxes.push(checkboxNodes[j].getElementsByTagName('option_text')[0].childNodes[0].nodeValue);
+                            }
+                        }
+
+                        addQuestion(questionText, questionType, options, checkboxes);
+                    }
+                };
+                reader.readAsText(file);
+            }
+        });
+        
+        function addQuestion(questionText, questionType, options = [], checkboxes = []) {
+            const container = document.getElementById('questions-container');
+            const questionNumber = container.children.length + 1;
+            const questionDiv = document.createElement('div');
+            questionDiv.className = 'question-container';
+
+            questionDiv.innerHTML = `
+                <div class="question-section">
+                    <label style="font-weight: bold;" for="question_text_${questionNumber}">Question:</label>
+                    <input type="text" class="form-control" id="question_text_${questionNumber}" name="questionText[]" value="${questionText}" required>
+                    <select style="margin-right:50px" class="form-control select-type" name="questionType[]" id="question_type_${questionNumber}" onchange="addOptionsField(this, ${questionNumber})">
+                        <option value="text" ${questionType === 'text' ? 'selected' : ''}>Plain Text</option>
+                        <option value="multiple_choice" ${questionType === 'multiple_choice' ? 'selected' : ''}>Multiple Choice</option>
+                        <option value="checkbox" ${questionType === 'checkbox' ? 'selected' : ''}>Checkbox</option>
+                    </select>
+                    <span class="delete-question" onclick="deleteQuestion(this)"><i class='bx bx-trash delete-question' style='font-size: 30px;'></i></span> 
+                </div>
+                <div id="options_container_${questionNumber}"></div>
+            `;
+
+            container.appendChild(questionDiv);
+            addOptionsField(document.getElementById(`question_type_${questionNumber}`), questionNumber, options, checkboxes);
+        }
+        document.getElementById('is_private').addEventListener('change', function() {
+            var passcodeField = document.getElementById('passcodeField');
+            if (this.checked) {
+                passcodeField.style.display = 'block';
+            } else {
+                passcodeField.style.display = 'none';
+            }
+        });
+    </script>
+</body>
+</html>

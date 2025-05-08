@@ -1,0 +1,144 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <title>My Surveys</title>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="X-UA-Compatible" content="ie=edge">
+    <link rel="stylesheet" href="/css/style.css">
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/css/bootstrap.min.css"
+          integrity="sha384-Gn5384xqQ1aoWXA+058RXPxPg6fy4IWvTNh0E263XmFcJlSAwiGgFAW/dAiS6JXm" crossorigin="anonymous">
+    <script src="https://code.jquery.com/jquery-3.5.1.slim.min.js" integrity="sha384-DfXdz2htPH0lsSSs5nCTpuj/zy4C+OGpamoFVy38MVBnE+IbbVYUew+OrCXaRkfj" crossorigin="anonymous"></script>
+
+    <style>
+        * {
+            font-family: sans-serif;
+        }
+        .container {
+            display: flex;
+            justify-content: center;
+            align-items: flex-start;
+            min-height: 100vh;
+            padding: 0 20px; 
+        }
+
+        .content-wrapper {
+            margin-top: 10vh; 
+            width: 100%; 
+            max-width: 1200px; 
+            overflow-x: auto; 
+        }
+
+        .content-table {
+            width: 100%; 
+            border-collapse: collapse;
+            margin: 25px 0;
+            font-size: 0.9em;
+            min-width: 400px;
+            border-radius: 5px 5px 0 0;
+            overflow: hidden;
+            box-shadow: 0 0 20px rgba(0, 0, 0, 0.15);
+        }
+
+        .content-table thead tr {
+            text-decoration: underline;
+            filter: blur(4);
+            font-size: 25px;
+            color: black;
+            text-align: left;
+            font-weight: bold;
+        }
+
+        .content-table th,
+        .content-table td {
+            padding: 12px 15px;
+        }
+
+        .content-table tbody tr {
+            border-bottom: 1px solid #dddddd;
+        }
+
+        .content-table tbody tr:nth-of-type(even) {
+            background-color: transparent;
+        }
+
+        .content-table tbody tr:last-of-type {
+        }
+
+        .content-table tbody tr.active-row {
+            font-weight: bold;
+            color: #009879;
+        }
+    </style>
+</head>
+<body>
+    <%- include('navbar.ejs') %>
+    <div class="container">
+        <div class="content-wrapper">
+            <% if (success && success.length > 0) { %>
+                <% success.forEach((message) => { %>
+                    <div id="success-alert" class="alert alert-success">
+                        <%- message %>
+                    </div>
+                <% }); %>
+            <% } %>
+            <% if (errors && errors.length > 0) { %>
+                <% errors.forEach((item) => { %>
+                    <div class="alert alert-danger">
+                        <%- item %>
+                    </div>
+                <% }); %>
+            <% } %>
+            <h1 class="centerTitle">My Surveys</h1>
+            <table class="content-table">
+                <thead>
+                    <tr>
+                        <th>Title</th>
+                        <th>Description</th>
+                        <th>Date</th>
+                        <th></th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <% if (surveys.length > 0) { %>
+                        <% surveys.forEach(survey => { %>
+                            <tr>
+                                <td><a style="color: black;" href="/survey/<%= survey.survey_id %>"><%= survey.title %></a></td>
+                                <td><%= survey.description %></td>
+                                <td><%= survey.created_at.toDateString() %></td>
+                                <td>
+                                    <a style="color: seagreen;" href="/edit-survey/<%= survey.survey_id %>"><i class='bx bxs-edit' style='font-size: 20px;'></i></a>
+                                    <form action="/delete-survey/<%= survey.survey_id %>" method="POST" style="display: inline;">
+                                        <button type="submit" onclick="return confirmDelete()" style="border: none; background: none; color: red; cursor: pointer;">
+                                            <i class='bx bx-trash' style='font-size: 20px;'></i>
+                                        </button>
+                                    </form>
+                                    <a style="color: blue;" href="/statistics/<%= survey.survey_id %>"><i class='bx bxs-bar-chart-alt-2' style='font-size: 20px;'></i></a>
+                                </td>
+                            </tr>
+                        <% }) %>
+                    <% } else { %>
+                        <tr>
+                            <td colspan="4">No surveys found.</td>
+                        </tr>
+                    <% } %>
+                </tbody>
+            </table>
+        </div>
+    </div>
+    <script>
+        function confirmDelete() {
+            return confirm('Are you sure you want to delete this survey?');
+        }
+
+        window.onload = function() {
+            const successAlert = document.getElementById('success-alert');
+            if (successAlert) {
+                setTimeout(() => {
+                    successAlert.style.display = 'none';
+                }, 3000);
+            }
+        };
+    </script>
+</body>
+</html>

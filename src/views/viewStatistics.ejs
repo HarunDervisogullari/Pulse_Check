@@ -1,0 +1,68 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Survey Statistics</title>
+    <link rel="stylesheet" href="/css/style.css">
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/css/bootstrap.min.css"
+          integrity="sha384-Gn5384xqQ1aoWXA+058RXPxPg6fy4IWvTNh0E263XmFcJlSAwiGgFAW/dAiS6JXm" crossorigin="anonymous">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+        .chart-container {
+            width: 100%;
+            height: auto;
+            margin-bottom: 30px;
+        }
+    </style>
+</head>
+<body>
+    <%- include('navbar.ejs') %>
+
+    <div class="container mt-5">
+        <h1>Statistics for : <%= survey.title %></h1>
+        <p style="font-size: 21px; "><strong>Survey description:</strong> <%= survey.description %></p>
+        <hr style="margin-bottom: 40px;">
+        <% Object.keys(statistics).forEach(function(questionId) { %>
+            <% if (statistics[questionId].question_type !== 'text') { %>
+                <div class="chart-container">
+                    <p style="font-size: 21px;"><strong> Question: </strong><%= statistics[questionId].question_text %></p>
+                    <p>(Type: <%= statistics[questionId].question_type.replace('_', ' ') %>)</p>
+                    <canvas id="chart-<%= questionId %>"></canvas>
+                </div>
+            <% } %>
+        <% }); %>
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            <% Object.keys(statistics).forEach(function(questionId) { %>
+                <% if (statistics[questionId].question_type !== 'text') { %>
+                    var ctx = document.getElementById('chart-<%= questionId %>').getContext('2d');
+                    var chartData = {
+                        labels: <%- JSON.stringify(statistics[questionId].options.map(function(option) { return option.option_text; })) %>,
+                        datasets: [{
+                            label: 'Answer Count',
+                            data: <%- JSON.stringify(statistics[questionId].options.map(function(option) { return option.answer_count; })) %>,
+                            backgroundColor: 'rgba(245, 114, 66, 0.6)', 
+                            borderColor: 'black', 
+                            borderWidth: 2 
+                        }]
+                    };
+                    new Chart(ctx, {
+                        type: 'bar',
+                        data: chartData,
+                        options: {
+                            scales: {
+                                y: {
+                                    beginAtZero: true
+                                }
+                            }
+                        }
+                    });
+                <% } %>
+            <% }); %>
+        });
+    </script>
+</body>
+</html>
